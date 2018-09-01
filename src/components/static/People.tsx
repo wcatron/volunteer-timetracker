@@ -8,20 +8,13 @@ import Times from '../Times'
 
 class Result {
     name: string
-    total: number
-    isCheckedIn: boolean
 }
 
 export default class Totals extends React.Component<{}, {
     results: Array<Result>
     loading: boolean
     selectedPerson: string
-    displayPerson: boolean
-    times: Array<{
-        startTime: number
-        endTime: number
-    }>
-    loadingTimes: boolean
+    displayPerson: boolean,
     search?: string
 }> {
     constructor(props) {
@@ -31,8 +24,6 @@ export default class Totals extends React.Component<{}, {
             loading: false,
             selectedPerson: "",
             displayPerson: false,
-            loadingTimes: false,
-            times:[],
             search: null
         }
     }
@@ -40,7 +31,7 @@ export default class Totals extends React.Component<{}, {
         this.loadResults()
     }
     loadResults() {
-        fetch('/api/totals').then((results) => {
+        fetch('/api/people').then((results) => {
             return results.json();
         }).then((results) => {
             this.setState({
@@ -51,6 +42,7 @@ export default class Totals extends React.Component<{}, {
     }
 
     loadTimes(name) {
+        console.log('loadTimes('+name+')')
         this.setState({
             selectedPerson: name,
             displayPerson: true
@@ -60,11 +52,11 @@ export default class Totals extends React.Component<{}, {
     render() {
         return (
             <div>
-                <Header textAlign="center">{this.state.displayPerson ? this.state.selectedPerson : `Total Hours`}</Header>
+                <Header textAlign="center">{this.state.displayPerson ? this.state.selectedPerson : `Volunteers`}</Header>
                
                 {this.state.displayPerson ? null : <div> <Button content='Refresh' loading={this.state.loading} onClick={() => {
                     this.loadResults()
-                }}/> <Button content='Export' as={'a'} {...{'href':'/api/totals?exportType=csv'}}/> <div style={{width: 200, float:'right'}}> <Search fluid open={false}
+                }}/> <div style={{width: 200, float:'right'}}> <Search fluid open={false}
                 loading={this.state.loading}
                 onSearchChange={(e, props) => {
                     if (props.value.length == 0) {
@@ -83,8 +75,6 @@ export default class Totals extends React.Component<{}, {
                     <Table.Header>
                     <Table.Row>
                         <Table.HeaderCell>Name</Table.HeaderCell>
-                        <Table.HeaderCell>Hours</Table.HeaderCell>
-                        <Table.HeaderCell>Minutes</Table.HeaderCell>
                     </Table.Row>
                     </Table.Header>
 
@@ -95,15 +85,11 @@ export default class Totals extends React.Component<{}, {
                         } else {
                             return (a.name.toLowerCase().indexOf(this.state.search.toLowerCase()) >= 0);
                         }
-                    }).sort((a,b) => { return b.total - a.total }).map((person: Result) => {
-                     var hours = Math.floor(person.total / (60 * 60))
-                     var minutes = Math.round((person.total / 60) - (hours * 60))
+                    }).sort().map((person: Result) => {
                     return ( <Table.Row onClick={() => {
                         this.loadTimes(person.name)
                     }}>
-                                <Table.Cell>{person.name} {person.isCheckedIn ? <Icon name="calendar check" /> : null }</Table.Cell>
-                                <Table.Cell>{hours}</Table.Cell>
-                                <Table.Cell>{minutes}</Table.Cell>
+                                <Table.Cell>{person.name}</Table.Cell>
 
                         </Table.Row>)
                  })}
@@ -112,19 +98,20 @@ export default class Totals extends React.Component<{}, {
                         </Table></div>}
                 {this.state.displayPerson ? <div style={{marginTop: 15}}>
 
-                
+    <Times selectedPerson={this.state.selectedPerson} onLoad={() => {
+                           this.setState({
+                               displayPerson: true
+                           })
+                       }} onBack={() =>{
+                        this.setState({
+                            displayPerson: false
+                        })
+                       }}/>
 
-                        <Times selectedPerson={this.state.selectedPerson} onLoad={() => {
-                            this.setState({
-                                displayPerson: true
-                            })
-                        }}  onBack={() => {
-                            this.loadResults()
-                            this.setState({
-                                displayPerson: false
-                            })
-                        }}/>
+                       
                 </div> : null }
+
+               
                         
             </div>
         )

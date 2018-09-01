@@ -16,9 +16,13 @@ export default class Index extends React.Component<{}, {
     found: boolean,
     displayCheckedInMessage: boolean,
     displayCheckedOutMessage: boolean,
+    displayUndoCheckOutMessage:boolean,
     loadingStatus: boolean,
     checkInDate: Date,
-    isCheckedIn: boolean
+    isCheckedIn: boolean,
+    adminClicks: number,
+    lastCheckOutName?: string,
+    lastCheckOutTime?: number
 }> {
     constructor(props) {
         super(props)
@@ -28,10 +32,14 @@ export default class Index extends React.Component<{}, {
             name: '',
             found: false,
             displayCheckedInMessage: false,
+            displayUndoCheckOutMessage: false,
             displayCheckedOutMessage: false,
             checkInDate: new Date(),
             loadingStatus: false,
-            isCheckedIn: false
+            isCheckedIn: false,
+            adminClicks: 0,
+            lastCheckOutName: null,
+            lastCheckOutTime: null
         }
     }
     loadPeople(name) {
@@ -97,14 +105,15 @@ export default class Index extends React.Component<{}, {
                 this.setState({
                     displayCheckedInMessage: false
                 })
-            }, 3000)
+            }, 5000)
             this.clearPerson();
         })
         
     }
     checkOut() {
         this.setState({
-            loadingStatus: true
+            loadingStatus: true,
+            lastCheckOutName: this.state.name
         })
         fetch('/api/checkOut?'+querystring.stringify({
             name: this.state.name
@@ -114,13 +123,44 @@ export default class Index extends React.Component<{}, {
             this.setState({
                 displayCheckedOutMessage: true,
                 checkInDate: new Date(),
-                isCheckedIn: false
+                isCheckedIn: false,
+                lastCheckOutTime: result.startTime
             })
             setTimeout(() => {
                 this.setState({
                     displayCheckedOutMessage: false
                 })
-            }, 3000)
+            }, 8000)
+            this.clearPerson();
+        })
+    }
+    undoCheckOut() {
+        this.setState({
+            loadingStatus: true,
+            displayCheckedOutMessage: false
+        })
+        fetch('/api/time?'+querystring.stringify({
+            name: this.state.lastCheckOutName,
+            type: 'end',
+            startTime: this.state.lastCheckOutTime,
+            newTime: ''
+        }), {
+            method: 'put'
+        }).then((result) => {
+            return result.json();
+        }).then(() => {
+            var time = new Date();
+            time.setTime(this.state.lastCheckOutTime * 1000);
+            this.setState({
+                displayUndoCheckOutMessage: true,
+                checkInDate: time,
+                isCheckedIn: true
+            })
+            setTimeout(() => {
+                this.setState({
+                    displayUndoCheckOutMessage: false
+                })
+            }, 5000)
             this.clearPerson();
         })
     }
@@ -133,8 +173,15 @@ export default class Index extends React.Component<{}, {
     }
     render() {
         return (
+            <Grid verticalAlign="middle" centered style={{height: '100%'}}>
+                <Grid.Row style={{height: '100%'}}>     
+                    <Grid.Column style={{maxWidth: 400}}>
             <div>
-                <div style={{maxHeight: 150, width:'100%', textAlign: 'center'}}><div style={{width: 150, margin:'auto'}}> <Image fluid src={require('../../images/catr_logo_300.png')} /> </div></div>
+                <div style={{maxHeight: 150, width:'100%', textAlign: 'center'}} onClick={() => {
+                    this.setState({
+                        adminClicks: this.state.adminClicks + 1
+                    })
+                }}><div style={{width: 150, margin:'auto'}}> <Image fluid src={require('../../images/catr_logo_300.png')} /> </div></div>
                 <Header textAlign="center">Volunteer Check-in and Check-out</Header>
                 <Form onSubmit={() => {
  this.findPerson();
@@ -170,13 +217,29 @@ export default class Index extends React.Component<{}, {
       You were successfully checked in at {dateFormat(this.state.checkInDate, "h:MM tt")}!
     </p>
   </Message> : null}
+  {this.state.displayUndoCheckOutMessage ? <Message>
+    <Message.Header>Undo Successful!</Message.Header>
+    <p>
+      You are still checked in at {dateFormat(this.state.checkInDate, "h:MM tt")}!
+    </p>
+  </Message> : null}
   {this.state.displayCheckedOutMessage ? <Message>
     <Message.Header>Checked Out!</Message.Header>
     <p>
-      You were successfully checked out at {dateFormat(this.state.checkInDate, "h:MM tt")}!
+      You were successfully checked out at {dateFormat(this.state.checkInDate, "h:MM tt")}! <a onClick={() =>{
+          this.undoCheckOut();
+      }} style={{cursor: 'pointer'}}>Undo</a>
     </p>
   </Message> : null}
+  {this.state.adminClicks >= 5 ? <div style={{marginTop: 15}}><Message error onDismiss={() => {
+      this.setState({
+          adminClicks: 0
+      })
+  }}>Enter the admin portal. <Link to="/admin">Click Here</Link></Message></div> : null}
             </div>
+            </Grid.Column>
+            </Grid.Row>
+            </Grid>
         )
     }
 }

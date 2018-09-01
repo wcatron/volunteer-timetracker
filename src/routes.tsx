@@ -6,12 +6,18 @@ import { syncHistoryWithStore, routerReducer } from 'react-router-redux'
 import App from './components/App'
 
 import Index from './components/static/Index'
+import Admin from './components/static/Admin'
 import Totals from './components/static/Totals'
+import People from './components/static/People'
 
 export default (
     <Route path="/" component={App}>
         <IndexRoute component={Index} />
-        <Route path="totals" component={Totals} />
+        <Route path="/admin" component={Admin}>
+            <IndexRoute component={Totals} />
+            <Route path="totals" component={Totals} />
+            <Route path="volunteers" component={People} />
+        </Route>
     </Route>
 );
 
