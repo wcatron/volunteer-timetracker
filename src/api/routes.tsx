@@ -205,7 +205,7 @@ module.exports = function(app){
         fs.createReadStream(DB.current())
         .pipe(parse({delimiter: ','}))
         .on('data', function(row) {
-            if (row[3] != category) {
+            if (row[3] != category && category !== "*") {
                 return;
             }
             var index = names.indexOf(row[0])

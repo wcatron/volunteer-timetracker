@@ -5,7 +5,7 @@ import { Menu, Container, Segment, Header, Grid } from 'semantic-ui-react'
 export default class App extends React.Component<{}, {}> {
     render() {
         return (
-            <Container fluid>
+          <div style={{height: '100%'}}>
              <Menu pointing secondary>
           <Menu.Item name='Totals' 
            as={Link} {...{to:'/admin/totals'}}/>
@@ -23,12 +23,16 @@ export default class App extends React.Component<{}, {}> {
             />
           </Menu.Menu>
         </Menu>
-
-        <Segment basic>
+        <div style={{overflowY: 'auto', height: 'calc(100% - 40px)', marginTop: -15}}>
+            <Container>
+            <Segment basic>
         {this.props.children}
-        </Segment>
+        </Segment></Container>
+            </div>
+          
+        
                
-            </Container>
+            </div>
         )
     }
 }

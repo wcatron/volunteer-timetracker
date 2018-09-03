@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link, browserHistory } from 'react-router'
-import { Segment, Header, Image, Grid, Table, Icon, Search, List, Input, Button, Container, Divider, Message} from 'semantic-ui-react'
+import { Segment, Header, Image, Grid, Table, Dropdown, Icon, Search, List, Input, Button, Container, Divider, Message} from 'semantic-ui-react'
 var fetch = require('node-fetch');
 var dateFormat = require('dateformat');
 const querystring = require('querystring');
@@ -24,6 +24,10 @@ export default class Totals extends React.Component<{}, {
     loadingTimes: boolean
     search?: string,
     currentCategory?: string
+    categories: Array<{
+        category: string,
+        current: boolean
+    }>
 }> {
     constructor(props) {
         super(props)
@@ -35,14 +39,39 @@ export default class Totals extends React.Component<{}, {
             loadingTimes: false,
             times:[],
             search: null,
-            currentCategory: null 
+            currentCategory: null ,
+            categories: []
         }
     }
     componentDidMount() {
-        this.loadResults()
+        this.loadCategories();
+        this.loadCurrentCategory();
     }
+    loadCurrentCategory() {
+        fetch('/api/currentCategory').then((results) => {
+            return results.json();
+        }).then((results) => {
+            this.setState({
+                currentCategory: results.category
+            }, () => {
+                this.loadResults();
+            })
+        })
+    }
+    loadCategories() {
+        fetch('/api/categories').then((results) => {
+            return results.json();
+        }).then((results) => {
+            this.setState({
+                categories: results
+            })
+        })
+    }
+    
     loadResults() {
-        fetch('/api/totals').then((results) => {
+        fetch('/api/totals?'+querystring.stringify({
+            category: this.state.currentCategory
+        })).then((results) => {
             return results.json();
         }).then((results) => {
             this.setState({
@@ -60,13 +89,34 @@ export default class Totals extends React.Component<{}, {
     }
     
     render() {
+        var categoryOptions = this.state.categories.map((category, index) => {
+            return {
+                key: index,
+                text: category.category,
+                value: category.category
+            }
+        })
+        categoryOptions.unshift({
+            key: categoryOptions.length,
+            text: 'All',
+            value: '*'
+        })
         return (
             <div>
                 <Header textAlign="center">{this.state.displayPerson ? this.state.selectedPerson : `Total Hours`}</Header>
                
                 {this.state.displayPerson ? null : <div> <Button content='Refresh' loading={this.state.loading} onClick={() => {
                     this.loadResults()
-                }}/> <Button content='Export' as={'a'} {...{'href':'/api/totals?exportType=csv'}}/> <div style={{width: 200, float:'right'}}> <Search fluid open={false}
+                }}/> <Button content='Export' as={'a'} {...{'href':'/api/totals?'+querystring.stringify({
+                    exportType: 'csv',
+                    category: this.state.currentCategory
+                })}}/> <Dropdown placeholder='Select Category' value={this.state.currentCategory} onChange={(e, data) => {
+                    this.setState({
+                        currentCategory: data.value.toString()
+                    }, () => {
+                        this.loadResults();
+                    })
+                }} options={categoryOptions} /> <div style={{width: 200, float:'right'}}> <Search fluid open={false}
                 loading={this.state.loading}
                 onSearchChange={(e, props) => {
                     if (props.value.length == 0) {
@@ -80,7 +130,7 @@ export default class Totals extends React.Component<{}, {
                     }
                 }}
                 value={this.state.search}
-            /></div>
+            /> </div>
                 <Table celled selectable>
                     <Table.Header>
                     <Table.Row>
