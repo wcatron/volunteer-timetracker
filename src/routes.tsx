@@ -9,6 +9,7 @@ import Index from './components/static/Index'
 import Admin from './components/static/Admin'
 import Totals from './components/static/Totals'
 import People from './components/static/People'
+import Categories from './components/static/Categories'
 
 export default (
     <Route path="/" component={App}>
@@ -17,6 +18,7 @@ export default (
             <IndexRoute component={Totals} />
             <Route path="totals" component={Totals} />
             <Route path="volunteers" component={People} />
+            <Route path="categories" component={Categories} />
         </Route>
     </Route>
 );

@@ -22,7 +22,8 @@ export default class Totals extends React.Component<{}, {
         endTime: number
     }>
     loadingTimes: boolean
-    search?: string
+    search?: string,
+    currentCategory?: string
 }> {
     constructor(props) {
         super(props)
@@ -33,7 +34,8 @@ export default class Totals extends React.Component<{}, {
             displayPerson: false,
             loadingTimes: false,
             times:[],
-            search: null
+            search: null,
+            currentCategory: null 
         }
     }
     componentDidMount() {

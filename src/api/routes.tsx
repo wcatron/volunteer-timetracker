@@ -6,6 +6,7 @@ var fs = require('fs');
 
 var DB = {
     latestDBTime: 0,
+    currentCategory: 'Uncategorized',
     init: function(){
         var files = fs.readdirSync('./times/')
         for (var i = 0, len = files.length; i < len; i++) {
@@ -60,8 +61,6 @@ module.exports = function(app){
         fs.createReadStream('./volunteers.csv')
             .pipe(parse({delimiter: ','}))
             .on('data', function(row) {
-                console.log(row);
-                //do something with csvrow
                 people.push({
                     name: row[0]
                 });
@@ -69,6 +68,38 @@ module.exports = function(app){
             .on('end',function() {
                 res.send(people);
             });
+    });
+
+    app.get('/api/categories', function(req, res){
+        var people = [];
+        fs.createReadStream('./categories.csv')
+            .pipe(parse({delimiter: ','}))
+            .on('data', function(row) {
+                people.push({
+                    category: row[0],
+                    current: (DB.currentCategory == row[0])
+                });
+            })
+            .on('end',function() {
+                res.send(people);
+            });
+    });
+
+    app.get('/api/currentCategory', function(req, res){
+        res.send(
+            {
+                "category": DB.currentCategory 
+            }
+        );
+    });
+
+    app.put('/api/currentCategory', function(req, res){
+        DB.currentCategory = req.query.category;
+        res.send(
+            {
+                "category": DB.currentCategory 
+            }
+        );
     });
 
     app.get('/api/isCheckedIn', function(req, res){
@@ -84,10 +115,10 @@ module.exports = function(app){
         var who = req.query.name;
         var type = req.query.type;
         var startTime = req.query.startTime;
-        var newTime = req.query.newTime;
-        var newTimes = [];
+        var newValue = req.query.newValue;
+        var newValues = [];
 
-        if (type != "start" && (type != "end" && type != "remove")) {
+        if ((type != "start" && type != "end") && (type != "category" && type != "remove")) {
             throw new Error("Invalid type of type of time to edit.");
         }
 
@@ -96,18 +127,20 @@ module.exports = function(app){
         .on('data', function(row) {
             if (row[0] == who && row[1] == startTime) {
                 if (type == "start") {
-                    row[1] = newTime;
+                    row[1] = newValue;
                 } else if (type == "end") {
-                    row[2] = newTime;
+                    row[2] = newValue;
+                } else if (type == "category") {
+                    row[3] = newValue;
                 } else if (type == "remove") {
                     return;
                 }
             }
-            newTimes.push(row)
+            newValues.push(row)
         })
         .on('end',function() {
             var writeStream = fs.createWriteStream(DB.next())
-            var generateCSV = stringify(newTimes, {delimiter: ','}).pipe(writeStream)
+            var generateCSV = stringify(newValues, {delimiter: ','}).pipe(writeStream)
             res.send([]);
         });
     });
@@ -116,7 +149,7 @@ module.exports = function(app){
         var who = req.query.name;
         isCheckedIn(who).then((isCheckedIn) => {
             if(isCheckedIn == false){
-                fs.appendFile(DB.current(), `${who},${Date.now() / 1000},\n`, function (err) {
+                fs.appendFile(DB.current(), `${who},${Date.now() / 1000},,${DB.currentCategory}\n`, function (err) {
                     if (err) throw err;
                     console.log('Saved!');
                     res.send({
@@ -162,11 +195,19 @@ module.exports = function(app){
         })
     })
     app.get('/api/totals', function(req, res){
+        var category = DB.currentCategory;
+        if (req.query.category != null) {
+            category = req.query.category;
+        }
+
         var names = []
         var results = []
         fs.createReadStream(DB.current())
         .pipe(parse({delimiter: ','}))
         .on('data', function(row) {
+            if (row[3] != category) {
+                return;
+            }
             var index = names.indexOf(row[0])
             if (index < 0) {
                 index = results.length
@@ -213,7 +254,8 @@ module.exports = function(app){
                 results.push({
                     name: row[0],
                     startTime: parseFloat(row[1]),
-                    endTime: parseFloat(row[2])
+                    endTime: parseFloat(row[2]),
+                    category: row[3]
                 });
             }
         })

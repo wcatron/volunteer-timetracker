@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link, browserHistory } from 'react-router'
-import { Segment, Header, Image, Grid, Table, Modal, Icon, List, Input, Button, Container, Divider, Message} from 'semantic-ui-react'
+import { Segment, Header, Image, Grid, Table, Modal, Icon, List, Input, Button, Container, Divider, Message, Dropdown} from 'semantic-ui-react'
 var fetch = require('node-fetch');
 var dateFormat = require('dateformat');
 const querystring = require('querystring');
@@ -20,14 +20,20 @@ export default class Totals extends React.Component<{
     times: Array<{
         startTime: number
         endTime: number
+        category: string
     }>
     loadingTimes: boolean,
     suggestCheckOut: boolean,
     suggestRemove?: number,
     editing: boolean,
     editingStartTime?: number
-    editingType: 'end' | 'start'
+    editingType: 'end' | 'start' | 'category'
     editingNewDate?: Date
+    editingNewCategory?: string
+    categories: Array<{
+        category: string,
+        current: boolean
+    }>
 }> {
     constructor(props) {
         super(props)
@@ -38,16 +44,28 @@ export default class Totals extends React.Component<{
             suggestRemove: null,
             editing: false,
             editingStartTime: null,
-            editingType: 'end'
+            editingType: 'end',
+            editingNewCategory: null,
+            categories: []
         }
     }
     componentDidMount() {
         this.loadTimes(this.props.selectedPerson)
+        this.loadCategories();
     }
     componentWillReceiveProps(nextProps) {
         if (this.props.selectedPerson != nextProps.selectedPerson) {
             this.loadTimes(nextProps.selectedPerson);
         }
+    }
+    loadCategories() {
+        fetch('/api/categories').then((results) => {
+            return results.json();
+        }).then((results) => {
+            this.setState({
+                categories: results
+            })
+        })
     }
 
     loadTimes(name) {
@@ -111,7 +129,7 @@ export default class Totals extends React.Component<{
             name: this.props.selectedPerson,
             type: this.state.editingType,
             startTime: this.state.editingStartTime,
-            newTime: (this.state.editingNewDate.getTime() / 1000)
+            newValue: (this.state.editingType == 'category') ? this.state.editingNewCategory : (this.state.editingNewDate.getTime() / 1000)
         }), {
             method: 'put'
         }).then((result) => {
@@ -145,6 +163,7 @@ export default class Totals extends React.Component<{
                         <Table.HeaderCell>Day</Table.HeaderCell>
                         <Table.HeaderCell>Start Time</Table.HeaderCell>
                         <Table.HeaderCell>End Time</Table.HeaderCell>
+                        <Table.HeaderCell>Category</Table.HeaderCell>
                         <Table.HeaderCell>Duration</Table.HeaderCell>
                     </Table.Row>
                     </Table.Header>
@@ -185,6 +204,21 @@ export default class Totals extends React.Component<{
                                     }}
                                     value={this.state.editingNewDate} isClockOpen={false}
                                     /> : (stillCheckedIn ? '-' : dateFormat(endDate,"h:MMtt"))}</Table.Cell>
+
+                                    <Table.Cell textAlign="center">{this.state.editingType == "category" ? <div>
+                                    <Dropdown placeholder='Select Category' fluid onChange={(e, data) => {
+                                        this.setState({
+                                            editingNewCategory: data.value.toString()
+                                        })
+                                    }} options={this.state.categories.map((category, index) => {
+                                        return {
+                                            key: index,
+                                            text: category.category,
+                                            value: category.category
+                                        }
+                                    })} />
+                                    </div> : (stillCheckedIn ? '-' : dateFormat(endDate,"h:MMtt"))}</Table.Cell>
+
                                     <Table.Cell><Button circular icon='check' onClick={() => {
                                         this.saveEdit();
                                     }} /> <Button circular icon='cancel' onClick={() => {
@@ -235,6 +269,13 @@ export default class Totals extends React.Component<{
                                         })
                                     }
                                 }}>{stillCheckedIn ? (this.state.suggestCheckOut ? 'Check Out' : '-') : dateFormat(endDate,"h:MMtt")}</Table.Cell>
+                                <Table.Cell selectable textAlign="center" onClick={() =>{
+                                    this.setState({
+                                        editing: true,
+                                        editingStartTime: time.startTime,
+                                        editingType: 'category'
+                                    })
+                                }}>{time.category}</Table.Cell>
                                 <Table.Cell style={{paddingLeft: 11}} selectable textAlign="left" onMouseOver={() => {
                                     this.setState({
                                         suggestRemove: time.startTime

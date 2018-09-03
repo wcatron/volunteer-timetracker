@@ -143,7 +143,7 @@ export default class Index extends React.Component<{}, {
             name: this.state.lastCheckOutName,
             type: 'end',
             startTime: this.state.lastCheckOutTime,
-            newTime: ''
+            newValue: ''
         }), {
             method: 'put'
         }).then((result) => {

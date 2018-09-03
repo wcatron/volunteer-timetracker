@@ -11,8 +11,10 @@ export default class App extends React.Component<{}, {}> {
            as={Link} {...{to:'/admin/totals'}}/>
            <Menu.Item name='Volunteers' 
            as={Link} {...{to:'/admin/volunteers'}}/>
+           <Menu.Item name='Categories' 
+           as={Link} {...{to:'/admin/categories'}}/>
           <Menu.Item
-            name='Back Ups'
+            name='Archives'
           />
           <Menu.Menu position='right'>
             <Menu.Item
