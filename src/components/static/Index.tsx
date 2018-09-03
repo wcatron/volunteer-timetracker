@@ -179,7 +179,7 @@ export default class Index extends React.Component<{}, {
             <div>
                 <div style={{maxHeight: 150, width:'100%', textAlign: 'center'}} onClick={() => {
                     this.setState({
-                        adminClicks: this.state.adminClicks + 1
+                        adminClicks: 0
                     })
                 }}><div style={{width: 150, margin:'auto'}}> <Image fluid src={require('../../images/catr_logo_300.png')} /> </div></div>
                 <Header textAlign="center">Volunteer Check-in and Check-out</Header>

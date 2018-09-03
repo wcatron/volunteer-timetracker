@@ -17,6 +17,7 @@ var DB = {
         if (this.latestDBTime == 0) {
             var now = new Date();
             this.latestDBTime = now.getTime();
+            fs.writeFile(this.current(), '');
         }
     },
     current: function(){
