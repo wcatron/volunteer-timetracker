@@ -195,12 +195,15 @@ export default class Index extends React.Component<{}, {
                     this.clearPerson();
                 }} /> </div>: <div style={{marginTop: 10}}>
                  <List divided link>
-                 {this.state.results.map((person: Person) => {
+                 {this.state.results.filter((person: Person, index) => {
+                     return (index < 5);
+                 }).map((person: Person) => {
                     return (<List.Item onClick={() => {
                         this.setPerson(person.name)
                     }} as="a">{person.name}</List.Item>)
                  })}
                 </List>
+                {this.state.results.length > 5 ? <div style={{ textAlign:'center', fontStyle:'italic', marginBottom: 20 }}>Too many options, please be more specific.</div> : null}
                 <Button fluid content="Find Me" onClick={() => {
                     this.findPerson();
                 }} /></div>}

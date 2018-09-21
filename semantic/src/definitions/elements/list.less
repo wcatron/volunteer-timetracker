@@ -347,6 +347,7 @@ ol.ui.list ol li,
 .ui.list .list > a.item:hover .icon,
 .ui.list > a.item:hover .icon {
   color: @itemLinkIconHoverColor;
+  font-weight: 400;
 }
 
 
@@ -418,12 +419,14 @@ ol.ui.list ol li,
 .ui.link.list .item,
 .ui.link.list a.item,
 .ui.link.list .item a:not(.ui) {
-  color: @linkListItemColor;
+  //color: @linkListItemColor;
+  color: #000000;
   transition: @linkListTransition;
 }
 .ui.link.list.list a.item:hover,
 .ui.link.list.list .item a:not(.ui):hover {
   color: @linkListItemHoverColor;
+  font-weight: bold;
 }
 .ui.link.list.list a.item:active,
 .ui.link.list.list .item a:not(.ui):active {
