@@ -287,7 +287,9 @@ export default class Totals extends React.Component<{
                                         })
                                     }
                                 }} onClick={() => {
-                                    this.remove(time.startTime)
+                                    if (window.confirm("Are you sure you want to remove this entry?")) { 
+                                        this.remove(time.startTime)
+                                    }
                                 }}>{this.state.suggestRemove == time.startTime ? 'Remove' : `${hours}h ${minutes}m`}</Table.Cell>
                         </Table.Row>)
                  })}
