@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link, browserHistory } from 'react-router'
-import { Segment, Header, Image, Grid, Table, Dropdown, Icon, Search, List, Input, Button, Container, Divider, Message} from 'semantic-ui-react'
+import { Segment, Header, Image, Grid,Label, Table, Dropdown, Icon, Search, List, Input, Button, Container, Divider, Message} from 'semantic-ui-react'
 var fetch = require('node-fetch');
 var dateFormat = require('dateformat');
 const querystring = require('querystring');
@@ -10,6 +10,21 @@ class Result {
     name: string
     total: number
     isCheckedIn: boolean
+    issue: boolean
+}
+
+const sortPeople = (a,b) => { 
+    if (a.issue && b.issue == false) {
+        return -1;
+    } else if (a.issue == false && b.issue) {
+        return 1;
+    }
+    if (a.isCheckedIn && b.isCheckedIn == false) {
+        return -1;
+    } else if (a.isCheckedIn == false && b.isCheckedIn) {
+        return 1;
+    } 
+    return b.total - a.total 
 }
 
 export default class Totals extends React.Component<{}, {
@@ -134,7 +149,7 @@ export default class Totals extends React.Component<{}, {
                 <Table celled selectable>
                     <Table.Header>
                     <Table.Row>
-                        <Table.HeaderCell>Name</Table.HeaderCell>
+                        <Table.HeaderCell>Name <Label size="tiny"><Icon name="calendar check" />Checked In</Label> <Label size="tiny"> <Icon name="flag" />Potential Issue</Label></Table.HeaderCell>
                         <Table.HeaderCell>Hours</Table.HeaderCell>
                         <Table.HeaderCell>Minutes</Table.HeaderCell>
                     </Table.Row>
@@ -147,13 +162,13 @@ export default class Totals extends React.Component<{}, {
                         } else {
                             return (a.name.toLowerCase().indexOf(this.state.search.toLowerCase()) >= 0);
                         }
-                    }).sort((a,b) => { return b.total - a.total }).map((person: Result) => {
+                    }).sort(sortPeople).map((person: Result) => {
                      var hours = Math.floor(person.total / (60 * 60))
                      var minutes = Math.round((person.total / 60) - (hours * 60))
                     return ( <Table.Row onClick={() => {
                         this.loadTimes(person.name)
                     }}>
-                                <Table.Cell>{person.name} {person.isCheckedIn ? <Icon name="calendar check" /> : null }</Table.Cell>
+                                <Table.Cell>{person.name} {person.isCheckedIn ? <Icon name="calendar check" /> : null } {person.issue ? <Icon name="flag" /> : null }</Table.Cell>
                                 <Table.Cell>{hours}</Table.Cell>
                                 <Table.Cell>{minutes}</Table.Cell>
 

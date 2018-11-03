@@ -216,17 +216,26 @@ module.exports = function(app){
                     name: row[0],
                     total: 0,
                     numberOfCheckIns: 0,
-                    isCheckedIn: false
+                    isCheckedIn: false,
+                    issue: false
                 })
                 names.push(row[0])
             }
             results[index].numberOfCheckIns++;
+            var duration;
             if (row[2] > row[1]) {
-                results[index].total += row[2] - row[1];
+                duration = row[2] - row[1];
             } else {
                 var now = new Date();
-                results[index].total += (now.getTime() / 1000) - row[1];
+                duration = (now.getTime() / 1000) - row[1];
                 results[index].isCheckedIn = true;
+            }
+            if (duration < (12 * 60 * 1000)) {
+                // Only add duration if less than 12 hours.
+                results[index].total += duration;
+            } else {
+                // Flag issue if duration is greater than 12 hours.
+                results[index].issue = true;
             }
         })
         .on('end',function() {
@@ -234,7 +243,7 @@ module.exports = function(app){
                 res.setHeader('Content-disposition', 'attachment; filename=totals.csv');
                 res.set('Content-Type', 'text/csv');
                 var makeCSV = stringify(results.map(row => {
-                    return [row.name, row.total, row.numberOfCheckIns]
+                    return [row.name, row.total, row.numberOfCheckIns, row.issue]
                 })).pipe(res);
                 res.on('end', function() {
                     res.status(200).end();

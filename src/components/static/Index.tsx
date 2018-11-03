@@ -72,8 +72,9 @@ export default class Index extends React.Component<{}, {
             name,
             found: true,
             loadingStatus: true
+        }, () => {
+            this.isCheckedIn();
         })
-        this.isCheckedIn();
     }
     isCheckedIn() {
         fetch('/api/isCheckedIn?'+querystring.stringify({
