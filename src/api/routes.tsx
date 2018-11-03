@@ -230,7 +230,7 @@ module.exports = function(app){
                 duration = (now.getTime() / 1000) - row[1];
                 results[index].isCheckedIn = true;
             }
-            if (duration < (12 * 60 * 1000)) {
+            if (duration < (12 * 60 * 60)) {
                 // Only add duration if less than 12 hours.
                 results[index].total += duration;
             } else {
